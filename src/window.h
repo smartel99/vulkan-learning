@@ -22,16 +22,19 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <string_view>
 #include <optional>
+#include <span>
+#include <string_view>
 
-struct Deleter
-{
-    void operator()(GLFWwindow *window) const noexcept;
+namespace glfw {
+struct Deleter {
+    void operator()(GLFWwindow* window) const noexcept;
 };
 
 using Window = std::unique_ptr<GLFWwindow, Deleter>;
 
-std::optional<Window> createWindow(glm::ivec2 size, std::string_view title);
-
-#endif // LEARNING_WINDOW_H
+std::optional<Window>               createWindow(glm::ivec2 size, std::string_view title);
+std::optional<vk::UniqueSurfaceKHR> createSurface(GLFWwindow* window, vk::Instance instance);
+std::span<const char* const>        getInstanceExtensions();
+}    // namespace glfw
+#endif    // LEARNING_WINDOW_H

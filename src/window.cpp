@@ -18,7 +18,8 @@
 
 #include "log.h"
 
-void Deleter::operator()(GLFWwindow *window) const noexcept
+namespace glfw {
+void Deleter::operator()(GLFWwindow* window) const noexcept
 {
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -26,28 +27,45 @@ void Deleter::operator()(GLFWwindow *window) const noexcept
 
 std::optional<Window> createWindow(glm::ivec2 size, std::string_view title)
 {
-    static const auto onError = [](int error, const char *description)
-    { BR_APP_CRITICAL("[GLFW] Error {}: {}", error, description); };
+    static const auto onError = [](int error, const char* description) {
+        BR_APP_CRITICAL("[GLFW] Error {}: {}", error, description);
+    };
     glfwSetErrorCallback(onError);
-    if (!glfwInit())
-    {
+    if (!glfwInit()) {
         BR_APP_CRITICAL("[GLFW] Failed to initialize");
         return std::nullopt;
     }
 
     // Check for vulkan support.
-    if (!glfwVulkanSupported())
-    {
+    if (!glfwVulkanSupported()) {
         BR_APP_CRITICAL("[GLFW] Vulkan not supported");
         return std::nullopt;
     }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    auto ret = Window{glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr), Deleter{}};
-    if (!ret)
-    {
+    auto ret = Window {glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr), Deleter {}};
+    if (!ret) {
         BR_APP_CRITICAL("[GLFW] Failed to create window");
         return std::nullopt;
     }
 
     return ret;
 }
+
+std::optional<vk::UniqueSurfaceKHR> createSurface(GLFWwindow* window, vk::Instance instance)
+{
+    VkSurfaceKHR surface;
+    auto         result = glfwCreateWindowSurface(instance, window, nullptr, &surface);
+    if (result != VK_SUCCESS || surface == VkSurfaceKHR {}) {
+        BR_APP_CRITICAL("[GLFW] Failed to create surface");
+        return std::nullopt;
+    }
+    return vk::UniqueSurfaceKHR {surface, instance};
+}
+
+std::span<const char* const> getInstanceExtensions()
+{
+    uint32_t     count      = 0;
+    const char** extensions = glfwGetRequiredInstanceExtensions(&count);
+    return {extensions, count};
+}
+}    // namespace glfw

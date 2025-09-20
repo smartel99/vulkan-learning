@@ -20,13 +20,19 @@
 #define LEARNING_APP_H
 #include "window.h"
 
-class App
-{
+class App {
 public:
     bool init();
     void run();
 
 private:
-    Window m_window;
+    bool initWindow();
+    bool initVulkan();
+    bool initSurface();
+
+private:
+    glfw::Window         m_window   = {};
+    vk::UniqueInstance   m_instance = {};
+    vk::UniqueSurfaceKHR m_surface  = {};
 };
-#endif // LEARNING_APP_H
+#endif    // LEARNING_APP_H

@@ -29,6 +29,9 @@ target_link_libraries(imgui PUBLIC
         glfw
         Vulkan::Hpp
 )
+target_compile_definitions(imgui PUBLIC
+    VK_NO_PROTOTYPES # Dynamically load Vulkan at runtime
+)
 target_sources(imgui PRIVATE
         imgui/imconfig.h
         imgui/imgui_demo.cpp

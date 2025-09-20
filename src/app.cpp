@@ -16,21 +16,64 @@
  */
 #include "app.h"
 
+#include "log.h"
+
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+
+namespace {
+constexpr auto vkVersion = VK_MAKE_VERSION(1, 3, 0);
+}
+
 bool App::init()
 {
-    auto maybeWindow = createWindow(glm::ivec2(1280, 720), "Vulkan Learning");
-    if (!maybeWindow.has_value())
-    {
-        return false;
-    }
-    m_window = std::move(maybeWindow.value());
+    if (!initWindow()) { return false; }
+    if (!initVulkan()) { return false; }
+    if (!initSurface()) { return false; }
     return true;
 }
 
 void App::run()
 {
-    while (!glfwWindowShouldClose(m_window.get()))
-    {
+    while (!glfwWindowShouldClose(m_window.get())) {
         glfwPollEvents();
     }
+}
+
+bool App::initWindow()
+{
+    auto maybeWindow = glfw::createWindow(glm::ivec2(1280, 720), "Vulkan Learning");
+    if (!maybeWindow.has_value()) { return false; }
+    m_window = std::move(maybeWindow.value());
+    return true;
+}
+
+bool App::initVulkan()
+{
+    VULKAN_HPP_DEFAULT_DISPATCHER.init();
+    auto loaderVersion = vk::enumerateInstanceVersion();
+    if (loaderVersion < vkVersion) {
+        BR_APP_ERROR("Loader does not support Vulkan 1.3!");
+        return false;
+    }
+
+    vk::ApplicationInfo appInfo = {
+      "Vulkan Learning",
+      vkVersion,
+    };
+
+    vk::InstanceCreateInfo instanceCreateInfo = {};
+    // We need WSI instance extensions here (platform-specific Swapchains).
+    const auto extensions = glfw::getInstanceExtensions();
+    instanceCreateInfo.setPApplicationInfo(&appInfo).setPEnabledExtensionNames(extensions);
+    m_instance = vk::createInstanceUnique(instanceCreateInfo);
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
+    return true;
+}
+
+bool App::initSurface()
+{
+    auto maybeSurface = glfw::createSurface(m_window.get(), *m_instance);
+    if (!maybeSurface.has_value()) { return false; }
+    m_surface = std::move(maybeSurface.value());
+    return true;
 }
