@@ -1,7 +1,15 @@
-#include <iostream>
+#include "app.h"
+
+#include "log.h"
 
 int main()
 {
-    std::cout << "Hello, World!" << std::endl;
+    Log::Init();
+
+    App app;
+    if (app.init())
+    {
+        app.run();
+    }
     return 0;
 }
